@@ -4,6 +4,7 @@ import tensorflow as tf
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+from cartpole import CartPoleEnv
 
 
 class DQN:
@@ -27,7 +28,7 @@ class DQN:
             tf.keras.layers.Flatten(),
             tf.keras.layers.Dense(self.hidden_1, input_dim=self.env.observation_space, activation=tf.nn.relu),
             tf.keras.layers.Dense(self.hidden_2, activation=tf.nn.relu),
-            tf.keras.layers.Dense(self.env.action_space.n, activation='linear')
+            tf.keras.layers.Dense(self.env.action_space.n+3, activation='linear')
         ])
         model.compile(optimizer=tf.keras.optimizers.Adam(lr=self.learning_rate),
                       loss='mse')
@@ -53,19 +54,13 @@ class DQN:
                 target[0][action] = reward + self.gamma * Q_
             self.model.fit(state, target, epochs=1, verbose=0)
 
-            # target = reward
-            # if not done:
-            #     target = reward + self.gamma * max(self.model.predict(state_)[0])
-            # target_f = self.model.predict(state)
-            # target_f[0][action] = target
-            # self.model.fit(state, target_f, epochs=1, verbose=0)
-
     def act(self, state):
-        self.epsilon *= self.decay
+        if self.epsilon > 0.01:
+            self.epsilon *= self.decay
         if np.random.random() <= self.epsilon:
-            return self.env.action_space.sample()
+            return self.env.action_space.sample(), 10
         else:
-            return np.argmax(self.model.predict(state)[0])
+            return np.argmax(self.model.predict(state)[0][0:2]), np.argmax(self.model.predict(state)[0][2:5])
 
     def save_model(self, filename):
         self.model.save_weights(filename)
@@ -75,27 +70,44 @@ class DQN:
 
 
 if __name__ == '__main__':
-    env = gym.make('CartPole-v1')
+    env = CartPoleEnv()
     agent = DQN(24, 24, env)
     # agent.load_model('bot.h5')
 
     episode_data = []
     score_data = []
+    episode_data_ = []
+    score_data_ = []
 
-    for episode in range(80):
+    # Learning
+    for episode in range(50):
         state = env.reset()
         state = np.reshape(state, [1, 4])                           # reshape from [[a, b]] to [a, b]
 
         for t in range(1000):
-            if episode > 40 < 50:
-                env.render()   # observe the results just a bit
-            action = agent.act(state)
+            action, force = agent.act(state)
+
+            # given Q values for each force and max arg of it, apply the corresponding force to the model
+            if force == 2:
+                env.force_mag = 6
+            elif force == 3:
+                env.force_mag = 8
+            else:
+                env.force_mag = 10
+
+            # perform one step
             state_, reward, done, info = env.step(action)
             state_ = np.reshape(state_, [1, 4])
-            reward = reward if not done else -20                    # additional reward for a loss
+
+            # reward function
+            reward = reward if not done else -20                # additional penalty for a loss
+            reward -= 1.0 * abs(state_[0][0])                   # penalty for moving too far away, increasing linearly
+
+            # archive the step and perform fitting to the model
             agent.remember(state, reward, action, state_, done)
             agent.replay()
 
+            # state = next state
             state = state_
 
             if done:
@@ -106,8 +118,41 @@ if __name__ == '__main__':
 
     # agent.save_model('bot.h5')
 
+    # Performance
+    for episode in range(15):
+        state = env.reset()
+        state = np.reshape(state, [1, 4])
+        agent.epsilon = 0
+        for t in range(10000):
+            env.render()
+            action, force = agent.act(state)
+            if force == 2:
+                env.force_mag = 6
+            elif force == 3:
+                env.force_mag = 8
+            else:
+                env.force_mag = 10
+            state_, reward, done, info = env.step(action)
+
+            state_ = np.reshape(state_, [1,4])
+            state = state_
+            if done or t == 9999:
+                episode_data_.append(episode)
+                score_data_.append(t)
+                print('Trial {} ended with score {}'.format(episode, t))
+                break
+
     plt.plot(episode_data, score_data)
     plt.xlabel('Episode number')
     plt.ylabel('Duration [time steps]')
+    plt.title('Learning')
+
+    plt.show()
+
+    plt.plot(episode_data_, score_data_)
+    plt.xlabel('Episode number')
+    plt.ylabel('Duration [time steps]')
+    plt.title('Performance')
+
     plt.show()
 
