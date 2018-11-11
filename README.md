@@ -7,7 +7,7 @@ Deep Q Network for solving the CartPole from OpenAI Gym
 * Two directions
 * Reward function: 
   - -20 for each loss (tilt larger than 12deg or moving out of the range of x (-4.2; 4.2))
-  - for each step: R = 1 - x_pos
+  - for each step: R = 1 - |x_pos|
 ## Results
 ![ezgif-1-ddfb79880e2c](https://user-images.githubusercontent.com/28646893/48311927-6f099c00-e5a7-11e8-917a-6297dfac65fe.gif)
 ![learning](https://user-images.githubusercontent.com/28646893/48311992-58177980-e5a8-11e8-8e36-d8546f04229a.png)
