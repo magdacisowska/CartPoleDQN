@@ -12,3 +12,7 @@ Deep Q Network for solving the CartPole from OpenAI Gym
 ![ezgif-1-ddfb79880e2c](https://user-images.githubusercontent.com/28646893/48311927-6f099c00-e5a7-11e8-917a-6297dfac65fe.gif)
 ![learning](https://user-images.githubusercontent.com/28646893/48311992-58177980-e5a8-11e8-8e36-d8546f04229a.png)
 ![perf](https://user-images.githubusercontent.com/28646893/48311993-5d74c400-e5a8-11e8-8bbc-a1d1bf75de62.png)
+
+## More evidence
+![success](https://user-images.githubusercontent.com/28646893/48915025-7ec59200-ee7d-11e8-83a4-3d6df3b27647.png)
+https://www.youtube.com/watch?v=J8FWwy-3TZ4&feature=youtu.be
