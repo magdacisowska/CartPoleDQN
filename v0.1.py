@@ -38,11 +38,12 @@ class DQN:
         self.memory.append((state, reward, action, state_, done))
 
     def replay(self):
-        batch_size = 32
+        batch_size = 32                             # shuffle the data
         if len(self.memory) < batch_size:
             return
 
         samples = random.sample(self.memory, batch_size)
+        # samples = self.memory[-32:]
         for state, reward, action, state_, done in samples:
             target = self.model.predict(state)
             if done:
@@ -80,7 +81,7 @@ if __name__ == '__main__':
     score_data_ = []
 
     # Learning
-    for episode in range(50):
+    for episode in range(5000):
         state = env.reset()
         state = np.reshape(state, [1, 4])                           # reshape from [[a, b]] to [a, b]
 
@@ -105,7 +106,7 @@ if __name__ == '__main__':
 
             # archive the step and perform fitting to the model
             agent.remember(state, reward, action, state_, done)
-            agent.replay()
+            # agent.replay()
 
             # state = next state
             state = state_
@@ -115,15 +116,15 @@ if __name__ == '__main__':
                 episode_data.append(episode)
                 score_data.append(t)
                 break
-
+        agent.replay()
     # agent.save_model('bot.h5')
 
     # Performance
-    for episode in range(15):
+    for episode in range(30):
         state = env.reset()
         state = np.reshape(state, [1, 4])
         agent.epsilon = 0
-        for t in range(10000):
+        for t in range(1000):
             env.render()
             action, force = agent.act(state)
             if force == 2:
@@ -136,7 +137,7 @@ if __name__ == '__main__':
 
             state_ = np.reshape(state_, [1,4])
             state = state_
-            if done or t == 9999:
+            if done or t == 1000:
                 episode_data_.append(episode)
                 score_data_.append(t)
                 print('Trial {} ended with score {}'.format(episode, t))
@@ -155,4 +156,3 @@ if __name__ == '__main__':
     plt.title('Performance')
 
     plt.show()
-
